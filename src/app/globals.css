@@ -10,6 +10,7 @@
   --color-mist: #eef3f9;
   --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
   --font-script: var(--font-caveat), cursive;
+  --ease-spring: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 html {
@@ -19,21 +20,209 @@ html {
 body {
   background: #ffffff;
   color: #0b1d36;
+  /* Off-screen slide-in elements (translateX) must not widen the page on phones.
+     clip, not hidden, so the sticky header keeps working. */
+  overflow-x: clip;
 }
 
-/* Small uppercase label above section headings */
+::selection {
+  background: #f6c330;
+  color: #071426;
+}
+
+/* Component classes live in the components layer so utility classes
+   (e.g. `hidden sm:inline-flex` on a .btn-primary) can still override them. */
+@layer components {
+
+/* Small uppercase label above section headings, with a short animated rule */
 .eyebrow {
-  @apply text-xs font-bold uppercase tracking-[0.18em] text-brand-600;
+  @apply inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-brand-600;
 }
-
-.btn-primary {
-  @apply inline-flex items-center justify-center gap-2 rounded-lg bg-brand px-6 py-3 text-sm font-bold text-navy-950 shadow-sm transition hover:bg-brand-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand;
-}
-
-.btn-ghost {
-  @apply inline-flex items-center justify-center gap-2 rounded-lg border border-white/40 px-6 py-3 text-sm font-semibold text-white transition hover:border-white hover:bg-white/10;
+.eyebrow::before {
+  content: "";
+  @apply h-0.5 w-6 rounded-full bg-brand;
+  transform-origin: left;
+  animation: grow-x 0.9s var(--ease-spring) both;
 }
 
 .container-x {
   @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+}
+
+/* ---------- Buttons ---------- */
+
+.btn-primary {
+  @apply relative inline-flex items-center justify-center gap-2 overflow-hidden whitespace-nowrap rounded-lg bg-brand px-6 py-3 text-sm font-bold text-navy-950 shadow-sm transition duration-300 hover:-translate-y-0.5 hover:bg-brand-600 hover:shadow-lg hover:shadow-brand/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand active:translate-y-0;
+}
+/* Light sweep across the button on hover */
+.btn-primary::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 -60%;
+  width: 45%;
+  background: linear-gradient(100deg, transparent, rgb(255 255 255 / 0.55), transparent);
+  transform: skewX(-20deg);
+  transition: left 0.7s var(--ease-spring);
+}
+.btn-primary:hover::after {
+  left: 120%;
+}
+
+.btn-ghost {
+  @apply inline-flex items-center justify-center gap-2 rounded-lg border border-white/40 px-6 py-3 text-sm font-semibold text-white transition duration-300 hover:-translate-y-0.5 hover:border-white hover:bg-white/10;
+}
+
+/* Arrow icons nudge forward when their link/button is hovered */
+.group:hover .nudge,
+a:hover > .nudge,
+button:hover > .nudge {
+  transform: translateX(4px);
+}
+.nudge {
+  transition: transform 0.3s var(--ease-spring);
+}
+
+/* Underline that grows from the left */
+.link-grow {
+  background: linear-gradient(currentColor, currentColor) left bottom / 0 2px no-repeat;
+  transition: background-size 0.35s var(--ease-spring);
+}
+.link-grow:hover,
+.group:hover .link-grow {
+  background-size: 100% 2px;
+}
+
+/* ---------- Cards ---------- */
+
+/* Cursor-following glow; --mx/--my are set by ScrollEffects */
+.spotlight {
+  position: relative;
+  isolation: isolate;
+}
+.spotlight::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: radial-gradient(320px circle at var(--mx, 50%) var(--my, 50%), rgb(246 195 48 / 0.18), transparent 65%);
+  opacity: 0;
+  transition: opacity 0.35s;
+  pointer-events: none;
+}
+.spotlight:hover::before {
+  opacity: 1;
+}
+
+.lift {
+  transition: transform 0.45s var(--ease-spring), box-shadow 0.45s var(--ease-spring);
+}
+.lift:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 22px 45px -18px rgb(11 29 54 / 0.28);
+}
+
+.group:hover .icon-pop {
+  animation: wiggle 0.6s var(--ease-spring);
+}
+
+} /* end @layer components */
+
+/* ---------- Scroll reveal (ScrollEffects adds .is-in) ---------- */
+
+@media (prefers-reduced-motion: no-preference) {
+  .js [data-reveal] {
+    opacity: 0;
+    transition:
+      opacity 0.8s var(--ease-spring),
+      transform 0.8s var(--ease-spring),
+      clip-path 1s var(--ease-spring);
+    transition-delay: var(--d, 0ms);
+  }
+  /* Stagger children get data-reveal from JS; hide them from first paint so they don't flash */
+  .js [data-stagger] > :not(.is-in) { opacity: 0; }
+  .js [data-reveal="up"] { transform: translateY(32px); }
+  .js [data-reveal="down"] { transform: translateY(-24px); }
+  .js [data-reveal="left"] { transform: translateX(-40px); }
+  .js [data-reveal="right"] { transform: translateX(40px); }
+  .js [data-reveal="zoom"] { transform: scale(0.92); }
+  .js [data-reveal="wipe"] { clip-path: inset(0 100% 0 0 round 1rem); opacity: 1; }
+  .js [data-reveal].is-in {
+    opacity: 1;
+    transform: none;
+    clip-path: inset(0 0 0 0 round 1rem);
+  }
+}
+
+/* ---------- Keyframe utilities ---------- */
+
+@keyframes grow-x { from { transform: scaleX(0); } }
+@keyframes rise { from { opacity: 0; transform: translateY(0.6em) rotate(2deg); } }
+@keyframes fade-up { from { opacity: 0; transform: translateY(24px); } }
+@keyframes fade-in { from { opacity: 0; } }
+@keyframes pop-in { from { opacity: 0; transform: scale(0.9) translateY(12px); } }
+@keyframes float { 50% { transform: translateY(-14px); } }
+@keyframes float-x { 50% { transform: translate(14px, -8px) rotate(3deg); } }
+@keyframes wiggle { 25% { transform: rotate(-12deg) scale(1.1); } 60% { transform: rotate(8deg) scale(1.1); } }
+@keyframes spin-slow { to { transform: rotate(360deg); } }
+@keyframes ken-burns { from { transform: scale(1.05); } to { transform: scale(1.18) translate(-2%, -1%); } }
+@keyframes drift {
+  33% { transform: translate(8%, -6%) scale(1.1); }
+  66% { transform: translate(-6%, 6%) scale(0.95); }
+}
+@keyframes rain {
+  from { transform: translate3d(0, -20vh, 0) rotate(12deg); }
+  to { transform: translate3d(-12vh, 120vh, 0) rotate(12deg); }
+}
+@keyframes marquee { to { transform: translateX(-50%); } }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgb(246 195 48 / 0.6); }
+  80%, 100% { box-shadow: 0 0 0 18px rgb(246 195 48 / 0); }
+}
+@keyframes shimmer { to { background-position: 200% center; } }
+@keyframes page-in { from { opacity: 0; transform: translateY(10px); } }
+
+@media (prefers-reduced-motion: no-preference) {
+  .anim-rise { display: inline-block; animation: rise 0.9s var(--ease-spring) both; animation-delay: var(--d, 0ms); }
+  .anim-fade-up { animation: fade-up 0.9s var(--ease-spring) both; animation-delay: var(--d, 0ms); }
+  .anim-fade-in { animation: fade-in 1.2s ease both; animation-delay: var(--d, 0ms); }
+  .anim-pop { animation: pop-in 0.55s var(--ease-spring) both; animation-delay: var(--d, 0ms); }
+  .anim-float { animation: float 5s ease-in-out infinite; animation-delay: var(--d, 0ms); }
+  .anim-float-x { animation: float-x 7s ease-in-out infinite; animation-delay: var(--d, 0ms); }
+  .anim-spin-slow { animation: spin-slow 30s linear infinite; }
+  .anim-ken-burns { animation: ken-burns 24s ease-in-out infinite alternate; }
+  .anim-drift { animation: drift 18s ease-in-out infinite; animation-delay: var(--d, 0ms); }
+  .anim-pulse-ring { animation: pulse-ring 2.2s ease-out infinite; }
+  .anim-draw { stroke-dasharray: var(--len, 600); stroke-dashoffset: var(--len, 600); animation: draw 2.6s var(--ease-spring) forwards; animation-delay: var(--d, 0ms); }
+  /* backwards (not both): leaves no transform behind, which would break position:fixed children */
+  .anim-page { animation: page-in 0.6s var(--ease-spring) backwards; }
+
+  .marquee-track { animation: marquee var(--speed, 40s) linear infinite; }
+  .marquee:hover .marquee-track { animation-play-state: paused; }
+
+  .rain-drop { animation: rain linear infinite; }
+}
+
+/* Gold text with a moving highlight */
+.text-shimmer {
+  background: linear-gradient(90deg, #f6c330 0%, #fff1bf 25%, #f6c330 50%, #fff1bf 75%, #f6c330 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .text-shimmer { animation: shimmer 5s linear infinite; }
+}
+
+/* Fade marquee edges */
+.mask-x {
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+
+/* Subtle dotted texture for dark sections */
+.bg-dots {
+  background-image: radial-gradient(rgb(255 255 255 / 0.08) 1px, transparent 1px);
+  background-size: 22px 22px;
 }

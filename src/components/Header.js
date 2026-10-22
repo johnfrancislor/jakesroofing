@@ -43,7 +43,7 @@ export default function Header() {
         </div>
       </div>
 
-      <div className="container-x flex h-18 items-center justify-between gap-6">
+      <div className={`container-x flex items-center justify-between gap-6 transition-[height] duration-300 ${scrolled ? "h-16" : "h-20"}`}>
         <Logo />
 
         <nav className="hidden lg:block" aria-label="Main">
@@ -52,12 +52,16 @@ export default function Header() {
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className={`relative rounded-md px-3.5 py-2 text-sm font-semibold transition ${
+                  className={`group relative rounded-md px-3.5 py-2 text-sm font-semibold transition ${
                     isActive(item.href) ? "text-navy-900" : "text-navy-700/70 hover:text-navy-900"
                   }`}
                 >
                   {item.label}
-                  {isActive(item.href) && <span className="absolute inset-x-3.5 -bottom-0.5 h-0.5 rounded bg-brand" />}
+                  <span
+                    className={`absolute inset-x-3.5 -bottom-0.5 h-0.5 rounded bg-brand transition-transform duration-300 ${
+                      isActive(item.href) ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
+                    }`}
+                  />
                 </Link>
               </li>
             ))}
@@ -65,9 +69,9 @@ export default function Header() {
         </nav>
 
         <div className="flex items-center gap-3">
-          <a href={site.phoneHref} className="hidden items-center gap-2 text-sm font-bold text-navy-900 xl:flex">
-            <span className="grid size-9 place-items-center rounded-full bg-mist">
-              <Icon name="phone" className="size-4" />
+          <a href={site.phoneHref} className="group hidden items-center gap-2 text-sm font-bold text-navy-900 xl:flex">
+            <span className="grid size-9 place-items-center rounded-full bg-mist transition group-hover:bg-brand">
+              <Icon name="phone" className="icon-pop size-4" />
             </span>
             {site.phone}
           </a>
@@ -82,7 +86,7 @@ export default function Header() {
             aria-controls="mobile-nav"
             aria-label={open ? "Close menu" : "Open menu"}
           >
-            <Icon name={open ? "close" : "menu"} />
+            <Icon name={open ? "close" : "menu"} className={`size-6 transition-transform duration-300 ${open ? "rotate-90" : ""}`} />
           </button>
         </div>
       </div>
@@ -91,11 +95,11 @@ export default function Header() {
         // Any link tap inside closes the menu
         <nav id="mobile-nav" className="border-t border-navy-900/10 bg-white lg:hidden" aria-label="Mobile" onClick={(e) => e.target.closest("a") && setOpen(false)}>
           <ul className="container-x flex flex-col py-3">
-            {nav.map((item) => (
-              <li key={item.href}>
+            {nav.map((item, i) => (
+              <li key={item.href} className="anim-fade-up" style={{ "--d": `${i * 45}ms` }}>
                 <Link
                   href={item.href}
-                  className={`block rounded-lg px-3 py-3 font-semibold ${isActive(item.href) ? "bg-mist text-navy-900" : "text-navy-700"}`}
+                  className={`block rounded-lg px-3 py-3 font-semibold transition hover:translate-x-1 hover:bg-mist ${isActive(item.href) ? "bg-mist text-navy-900" : "text-navy-700"}`}
                 >
                   {item.label}
                 </Link>

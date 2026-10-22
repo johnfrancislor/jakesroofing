@@ -20,7 +20,7 @@ export default function Footer() {
           <ul className="mt-4 space-y-2.5 text-sm">
             {nav.map((item) => (
               <li key={item.href}>
-                <Link href={item.href} className="hover:text-brand">{item.label}</Link>
+                <Link href={item.href} className="inline-block transition duration-300 hover:translate-x-1 hover:text-brand">{item.label}</Link>
               </li>
             ))}
           </ul>
@@ -31,7 +31,7 @@ export default function Footer() {
           <ul className="mt-4 space-y-2.5 text-sm">
             {services.slice(0, 7).map((s) => (
               <li key={s.title}>
-                <Link href="/services/" className="hover:text-brand">{s.title}</Link>
+                <Link href="/services/" className="inline-block transition duration-300 hover:translate-x-1 hover:text-brand">{s.title}</Link>
               </li>
             ))}
           </ul>
